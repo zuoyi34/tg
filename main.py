@@ -12,7 +12,7 @@ import threading
 app = FastAPI(title="TG群发助手后台")
 
 # 静态文件目录
-app.mount("/static", StaticFiles(directory="static"), name="static")
+#app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # 跨域配置
 app.add_middleware(
@@ -90,7 +90,6 @@ class LoginRequest(BaseModel):
 class LogoutRequest(BaseModel):
     session_id: str
 
-# 修改这里，ValidateRequest 接收 token 而不是 session_id
 class ValidateRequest(BaseModel):
     token: str
 
@@ -132,6 +131,7 @@ def check_admin_auth(auth: Optional[str], conn):
         raise HTTPException(401, "未授权")
     token = auth[7:]
     c = conn.cursor()
+    # 直接比对明文密码
     c.execute("SELECT username FROM admins WHERE password = ?", (token,))
     if not c.fetchone():
         raise HTTPException(401, "无效管理员token")
@@ -163,7 +163,6 @@ def update_session_active(session_id, conn):
     c.execute("UPDATE sessions SET last_active = ? WHERE session_id = ?", (now, session_id))
     conn.commit()
 
-# 修改这里，按 token 查找 session
 def get_session_or_401(token: str):
     with get_db() as conn:
         c = conn.cursor()
@@ -194,6 +193,7 @@ def admin_login(req: AdminLoginRequest):
         row = c.fetchone()
         if not row or row["password"] != req.password:
             raise HTTPException(401, "用户名或密码错误")
+        # 直接返回明文密码作为token
         return {"code": 0, "msg": "登录成功", "token": row["password"]}
 
 @app.get("/admin/licenses")
@@ -270,7 +270,6 @@ def api_logout(req: LogoutRequest):
         conn.commit()
         return {"code": 0, "msg": "登出成功"}
 
-# ---------------- 修改 /api/validate ----------------
 @app.post("/api/validate")
 def api_validate(req: ValidateRequest):
     session = get_session_or_401(req.token)
