@@ -1,0 +1,6 @@
+{
+  "startCommand": "hypercorn main:app --bind 0.0.0.0:$PORT",
+  "static": {
+    "public": "static"
+  }
+}
