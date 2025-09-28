@@ -1,4 +1,4 @@
 fastapi
 uvicorn[standard]
 pydantic
-aiofiles
+sqlite3  # 这个是内置模块不用写
